@@ -316,4 +316,104 @@ Path.prototype.toDOMElement = function(decimalPlaces) {
     return newPath;
 };
 
+/**
+ * Interpolates the path with the given options
+ * @param  {number} [lineSamples=5] - The number of samples to interpolate from a line command
+ * @param  {number} [curveSamples=10] - The number of samples to interpolate from a curve command
+ * @return {array} - The interpolated points
+ */
+Path.prototype.interpolate = function(lineSamples, curveSamples){
+
+    if(lineSamples == undefined)
+        lineSamples = 5;
+    if(curveSamples == undefined)
+        curveSamples = 10;
+
+    var points = [];
+    var k = 0;
+
+    for (var c = 0; c < commands.length; c++) {
+        var command = commands[c];
+        var samples = (command.type == "M" ? 1 : (command.type == "L" ? lineSamples : curveSamples));
+        
+        var state = { lastX: 0, lastY: 0, current: { x: 0, y: 0 } };
+
+        for (var i = 0 ; i < sampleCount; i++) {
+            if(step_fn(command, state, i/sampleCount)){
+                points[k] = state.current.x;
+                points[k+1] = state.current.y;
+                k += 2;
+            }
+        }
+    }
+    var step_fn = function(command, state, t){
+        switch (command.type) {
+            case "M": state.lastX = command.x, state.lastY = command.y; return false;
+            case "L": interpolatePoints(state.lastX, state.lastY, command.x, command.y, t, state.current); return true;
+            //case "Q": interpolatorQuadraticBezier(command.x1, command.y1, command.x, command.y, t, PathInterpolator.Data, PathInterpolator.Index); return 0;
+                //case "Z": interpolatePoints(PathInterpolator.firstPoint_x, PathInterpolator.firstPoint_y, t, PathInterpolator.Data, PathInterpolator.Index); return 1;
+                //default: console.warn('Unimplemented command -> ', command.type);
+        }
+    }
+    return points;
+};
+
+Path.prototype.interpolate = function(options){
+
+};
+/**
+ * Computes point between two points at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of end point
+ * @param  {number} y1 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} [out=undefined] - optional out point
+ */
+Path.prototype.interpolatePoints = function interpolatePoints(x0, y0, x1, y1, t, out) {
+    if (out === undefined)
+        out = {};
+    out.x = (1 - t) * x0 + t * x1;
+    out.y = (1 - t) * y0 + t * y1;
+    return out;
+}
+/**
+ * Computes point along a quadratic bezier curve at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of control point 
+ * @param  {number} y1 - y of control point 
+ * @param  {number} x2 - x of end point
+ * @param  {number} y2 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} [out=undefined] - optional out point
+ */
+Path.prototype.interpolateQuadraticBezier = function interpolateQuadraticBezier(x0, y0, x1, y1, x2, y2, t, out) {
+    if (out === undefined)
+        out = {};
+    out.x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
+    out.y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
+    return out;
+}
+
+/**
+ * Computes point along a cubic bezier curve at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of control point 1
+ * @param  {number} y1 - y of control point 1
+ * @param  {number} x2 - x of control point 2
+ * @param  {number} y2 - y of control point 2
+ * @param  {number} x3 - x of end point
+ * @param  {number} y3 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} [out=undefined] - optional out point
+ */
+Path.prototype.interpolateCubicBezier = function interpolateCubicBezier(x0, y0, x1, y1, x2, y2, x3, y3, t, out) {
+    if (out === undefined)
+        out = {};
+    out.x = (1 - t) * (1 - t) * (1 - t) * x0 + 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t * x3;
+    out.y = (1 - t) * (1 - t) * (1 - t) * y0 + 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t * y3;
+    return out;
+}
 export default Path;

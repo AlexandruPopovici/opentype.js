@@ -1,5 +1,5 @@
 /**
- * https://opentype.js.org v0.7.1 | (c) Frederik De Bleser and other contributors | MIT License | Uses tiny-inflate by Devon Govett
+ * https://opentype.js.org v0.7.2 | (c) Frederik De Bleser and other contributors | MIT License | Uses tiny-inflate by Devon Govett
  */
 
 (function (global, factory) {
@@ -865,6 +865,74 @@ Path.prototype.toDOMElement = function(decimalPlaces) {
     newPath.setAttribute('d', temporaryPath);
 
     return newPath;
+};
+
+/**
+ * Convert the path to a DOM element.
+ * @param  {number} [decimalPlaces=2] - The amount of decimal places for floating-point values
+ * @return {SVGPathElement}
+ */
+Path.prototype.interpolate = function(options){
+
+};
+
+Path.prototype.interpolate = function(options){
+
+};
+/**
+ * Computes point between two points at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of end point
+ * @param  {number} y1 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} out - optional out point
+ */
+Path.prototype.interpolatePoints = function interpolatePoints(x0, y0, x1, y1, t, out) {
+    if (out === undefined)
+        { out = {}; }
+    out.x = (1 - t) * x0 + t * x1;
+    out.y = (1 - t) * y0 + t * y1;
+    return out;
+};
+/**
+ * Computes point along a quadratic bezier curve at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of control point 
+ * @param  {number} y1 - y of control point 
+ * @param  {number} x2 - x of end point
+ * @param  {number} y2 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} out - optional out point
+ */
+Path.prototype.interpolateQuadraticBezier = function interpolateQuadraticBezier(x0, y0, x1, y1, x2, y2, t, out) {
+    if (out === undefined)
+        { out = {}; }
+    out.x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
+    out.y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
+    return out;
+};
+
+/**
+ * Computes point along a cubic bezier curve at t
+ * @param  {number} x0 - x of start point
+ * @param  {number} y0 - y of start point
+ * @param  {number} x1 - x of control point 1
+ * @param  {number} y1 - y of control point 1
+ * @param  {number} x2 - x of control point 2
+ * @param  {number} y2 - y of control point 2
+ * @param  {number} x3 - x of end point
+ * @param  {number} y3 - y of end point
+ * @param  {number} t - curve time[0,1]
+ * @param  {number} out - optional out point
+ */
+Path.prototype.interpolateCubicBezier = function interpolateCubicBezier(x0, y0, x1, y1, x2, y2, x3, y3, t, out) {
+    if (out === undefined)
+        { out = {}; }
+    out.x = (1 - t) * (1 - t) * (1 - t) * x0 + 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t * x3;
+    out.y = (1 - t) * (1 - t) * (1 - t) * y0 + 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t * y3;
+    return out;
 };
 
 // Run-time checking of preconditions.
@@ -1851,14 +1919,6 @@ sizeOf.LITERAL = function(v) {
 
 // Table metadata
 
-/**
- * @exports opentype.Table
- * @class
- * @param {string} tableName
- * @param {Array} fields
- * @param {Object} options
- * @constructor
- */
 function Table(tableName, fields, options) {
     var this$1 = this;
 
@@ -2049,7 +2109,6 @@ var table = {
 
 // Parsing utility functions
 
-// Retrieve an unsigned byte from the DataView.
 function getByte(dataView, offset) {
     return dataView.getUint8(offset);
 }
@@ -3041,7 +3100,6 @@ var draw = { line: line };
 // The `glyf` table describes the glyphs in TrueType outline format.
 // http://www.microsoft.com/typography/otspec/glyf.htm
 
-// Parse the coordinate data for a glyph.
 function parseGlyphCoordinate(p, flag, previousValue, shortVectorBitMask, sameBitMask) {
     var v;
     if ((flag & shortVectorBitMask) > 0) {
@@ -3721,7 +3779,6 @@ Glyph.prototype.drawMetrics = function(ctx, x, y, fontSize) {
 
 // The GlyphSet object
 
-// Define a property on the glyph that depends on the path being loaded.
 function defineDependentProperty(glyph, externalName, internalName) {
     Object.defineProperty(glyph, externalName, {
         get: function() {
@@ -3852,7 +3909,6 @@ var glyphset = { GlyphSet: GlyphSet, glyphLoader: glyphLoader, ttfGlyphLoader: t
 // http://download.microsoft.com/download/8/0/1/801a191c-029d-4af3-9642-555f6fe514ee/cff.pdf
 // http://download.microsoft.com/download/8/0/1/801a191c-029d-4af3-9642-555f6fe514ee/type2.pdf
 
-// Custom equals function that can also check lists.
 function equals(a, b) {
     if (a === b) {
         return true;
@@ -5110,7 +5166,6 @@ var cff = { parse: parseCFFTable, make: makeCFFTable };
 // The `head` table contains global information about the font.
 // https://www.microsoft.com/typography/OTSPEC/head.htm
 
-// Parse the header `head` table
 function parseHeadTable(data, start) {
     var head = {};
     var p = new parse.Parser(data, start);
@@ -5170,7 +5225,6 @@ var head = { parse: parseHeadTable, make: makeHeadTable };
 // The `hhea` table contains information for horizontal layout.
 // https://www.microsoft.com/typography/OTSPEC/hhea.htm
 
-// Parse the horizontal header `hhea` table
 function parseHheaTable(data, start) {
     var hhea = {};
     var p = new parse.Parser(data, start);
@@ -5218,8 +5272,6 @@ var hhea = { parse: parseHheaTable, make: makeHheaTable };
 // The `hmtx` table contains the horizontal metrics for all glyphs.
 // https://www.microsoft.com/typography/OTSPEC/hmtx.htm
 
-// Parse the `hmtx` table, which contains the horizontal metrics for all glyphs.
-// This function augments the glyph array, adding the advanceWidth and leftSideBearing to each glyph.
 function parseHmtxTable(data, start, numMetrics, numGlyphs, glyphs) {
     var advanceWidth;
     var leftSideBearing;
@@ -5311,7 +5363,6 @@ var ltag = { make: makeLtagTable, parse: parseLtagTable };
 // We need it just to get the number of glyphs in the font.
 // https://www.microsoft.com/typography/OTSPEC/maxp.htm
 
-// Parse the maximum profile `maxp` table.
 function parseMaxpTable(data, start) {
     var maxp = {};
     var p = new parse.Parser(data, start);
@@ -5348,7 +5399,6 @@ var maxp = { parse: parseMaxpTable, make: makeMaxpTable };
 // The `name` naming table.
 // https://www.microsoft.com/typography/OTSPEC/name.htm
 
-// NameIDs for the name table.
 var nameTableNames = [
     'copyright',              // 0
     'fontFamily',             // 1
@@ -6424,7 +6474,6 @@ var os2 = { parse: parseOS2Table, make: makeOS2Table, unicodeRanges: unicodeRang
 // The `post` table stores additional PostScript information, such as glyph names.
 // https://www.microsoft.com/typography/OTSPEC/post.htm
 
-// Parse the PostScript `post` table
 function parsePostTable(data, start) {
     var post = {};
     var p = new parse.Parser(data, start);
@@ -6741,8 +6790,6 @@ var gsub = { parse: parseGsubTable, make: makeGsubTable };
 // The `GPOS` table contains kerning pairs, among other things.
 // https://www.microsoft.com/typography/OTSPEC/gpos.htm
 
-// Parse the metadata `meta` table.
-// https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6meta.html
 function parseMetaTable(data, start) {
     var p = new parse.Parser(data, start);
     var tableVersion = p.parseULong();
@@ -7394,13 +7441,6 @@ Layout.prototype = {
 // The Substitution object provides utility methods to manipulate
 // the GSUB substitution table.
 
-/**
- * @exports opentype.Substitution
- * @class
- * @extends opentype.Layout
- * @param {opentype.Font}
- * @constructor
- */
 function Substitution(font) {
     Layout.call(this, font, 'gsub');
 }
@@ -10771,42 +10811,6 @@ vim: set ts=4 sw=4 expandtab:
 
 // The Font object
 
-/**
- * @typedef FontOptions
- * @type Object
- * @property {Boolean} empty - whether to create a new empty font
- * @property {string} familyName
- * @property {string} styleName
- * @property {string=} fullName
- * @property {string=} postScriptName
- * @property {string=} designer
- * @property {string=} designerURL
- * @property {string=} manufacturer
- * @property {string=} manufacturerURL
- * @property {string=} license
- * @property {string=} licenseURL
- * @property {string=} version
- * @property {string=} description
- * @property {string=} copyright
- * @property {string=} trademark
- * @property {Number} unitsPerEm
- * @property {Number} ascender
- * @property {Number} descender
- * @property {Number} createdTimestamp
- * @property {string=} weightClass
- * @property {string=} widthClass
- * @property {string=} fsSelection
- */
-
-/**
- * A Font represents a loaded OpenType font file.
- * It contains a set of glyphs and methods to draw text on a drawing context,
- * or to get a path representing the text.
- * @exports opentype.Font
- * @class
- * @param {FontOptions}
- * @constructor
- */
 function Font(options) {
     options = options || {};
 
@@ -11093,7 +11097,7 @@ Font.prototype.getPath = function(text, x, y, fontSize, options) {
 Font.prototype.getPaths = function(text, x, y, fontSize, options) {
     var glyphPaths = [];
     this.forEachGlyph(text, x, y, fontSize, options, function(glyph, gX, gY, gFontSize) {
-        var glyphPath = glyph.getPath(gX, gY, gFontSize);
+        var glyphPath = glyph.getPath(gX, gY, gFontSize, options, this);
         glyphPaths.push(glyphPath);
     });
 
@@ -11454,8 +11458,6 @@ var fvar = { make: makeFvarTable, parse: parseFvarTable };
 // The `GPOS` table contains kerning pairs, among other things.
 // https://www.microsoft.com/typography/OTSPEC/gpos.htm
 
-// Parse ScriptList and FeatureList tables of GPOS, GSUB, GDEF, BASE, JSTF tables.
-// These lists are unused by now, this function is just the basis for a real parsing.
 function parseTaggedListTable(data, start) {
     var p = new parse.Parser(data, start);
     var n = p.parseUShort();
@@ -11756,12 +11758,6 @@ var kern = { parse: parseKernTable };
 // The `loca` table stores the offsets to the locations of the glyphs in the font.
 // https://www.microsoft.com/typography/OTSPEC/loca.htm
 
-// Parse the `loca` table. This table stores the offsets to the locations of the glyphs in the font,
-// relative to the beginning of the glyphData table.
-// The number of glyphs stored in the `loca` table is specified in the `maxp` table (under numGlyphs)
-// The loca table has two versions: a short version where offsets are stored as uShorts, and a long
-// version where offsets are stored as uLongs. The `head` table specifies which version to use
-// (under indexToLocFormat).
 function parseLocaTable(data, start, numGlyphs, shortVersion) {
     var p = new parse.Parser(data, start);
     var parseFn = shortVersion ? p.parseUShort : p.parseULong;
@@ -11790,18 +11786,6 @@ var loca = { parse: parseLocaTable };
 
 /* global DataView, Uint8Array, XMLHttpRequest  */
 
-/**
- * The opentype library.
- * @namespace opentype
- */
-
-// File loaders /////////////////////////////////////////////////////////
-/**
- * Loads a font from a file. The callback throws an error message as the first parameter if it fails
- * and the font as an ArrayBuffer in the second parameter if it succeeds.
- * @param  {string} path - The path of the file
- * @param  {Function} callback - The function to call when the font load completes
- */
 function loadFromFile(path, callback) {
     var fs = require('fs');
     fs.readFile(path, function(err, buffer) {
