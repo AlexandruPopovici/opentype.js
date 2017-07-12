@@ -868,17 +868,58 @@ Path.prototype.toDOMElement = function(decimalPlaces) {
 };
 
 /**
- * Convert the path to a DOM element.
- * @param  {number} [decimalPlaces=2] - The amount of decimal places for floating-point values
- * @return {SVGPathElement}
+ * Interpolates the path with the given options
+ * @param  {number} [lineSamples=5] - The number of samples to interpolate from a line command
+ * @param  {number} [curveSamples=10] - The number of samples to interpolate from a curve command
+ * @return {array} - The interpolated points
  */
-Path.prototype.interpolate = function(options){
+Path.prototype.interpolate = function(lineSamples, curveSamples){
+    var this$1 = this;
 
+
+    if(lineSamples == undefined)
+        { lineSamples = 5; }
+    if(curveSamples == undefined)
+        { curveSamples = 10; }
+
+    var points = [];
+    var k = 0;
+    var step_fn = function(command, state, t){
+        switch (command.type) {
+            case "M": state.lastX = command.x, state.lastY = command.y; return false;
+            case "L": this.interpolatePoints(state.lastX, state.lastY, command.x, command.y, t, state.current); return true;
+            case "Q": this.interpolateQuadraticBezier(state.lastX, state.lastY, command.x1, command.y1, command.x, command.y, t, state.current); return true;
+            case "C": this.interpolateCubicBezier(state.lastX, state.lastY, command.x1, command.y1, command.x2, command.y2, command.x, command.y, t, state.current); return true;
+            case "Z": this.interpolatePoints(state.lastX, state.lastY, this.commands[0].x, this.commands[0].y, t, state.current); return true;
+        }
+    }.bind(this);
+
+    var state = { lastX: 0, lastY: 0, current: { x: 0, y: 0 } };
+
+    for (var c = 0; c < this.commands.length; c++) {
+        var command = this$1.commands[c];
+        var samples = (command.type == "M" || command.type == "Z" ? 1 : (command.type == "L" ? lineSamples : curveSamples));
+
+        for (var i = 0 ; i <= samples; i++) {
+            if(step_fn(command, state, i/samples)){
+                var dx = Math.abs(state.lastX - state.current.x);
+                var dy = Math.abs(state.lastY - state.current.y);
+                var d = Math.sqrt(dx*dx+dy*dy);
+                if(d > 5){
+                    points[k] = state.current.x;
+                    points[k+1] = state.current.y;
+                    state.lastX = state.current.x;
+                    state.lastY = state.current.y;
+                    k += 2;
+                }
+            }
+        }
+    }
+    
+    return points;
 };
 
-Path.prototype.interpolate = function(options){
 
-};
 /**
  * Computes point between two points at t
  * @param  {number} x0 - x of start point
@@ -886,7 +927,7 @@ Path.prototype.interpolate = function(options){
  * @param  {number} x1 - x of end point
  * @param  {number} y1 - y of end point
  * @param  {number} t - curve time[0,1]
- * @param  {number} out - optional out point
+ * @param  {number} [out=undefined] - optional out point
  */
 Path.prototype.interpolatePoints = function interpolatePoints(x0, y0, x1, y1, t, out) {
     if (out === undefined)
@@ -904,7 +945,7 @@ Path.prototype.interpolatePoints = function interpolatePoints(x0, y0, x1, y1, t,
  * @param  {number} x2 - x of end point
  * @param  {number} y2 - y of end point
  * @param  {number} t - curve time[0,1]
- * @param  {number} out - optional out point
+ * @param  {number} [out=undefined] - optional out point
  */
 Path.prototype.interpolateQuadraticBezier = function interpolateQuadraticBezier(x0, y0, x1, y1, x2, y2, t, out) {
     if (out === undefined)
@@ -925,7 +966,7 @@ Path.prototype.interpolateQuadraticBezier = function interpolateQuadraticBezier(
  * @param  {number} x3 - x of end point
  * @param  {number} y3 - y of end point
  * @param  {number} t - curve time[0,1]
- * @param  {number} out - optional out point
+ * @param  {number} [out=undefined] - optional out point
  */
 Path.prototype.interpolateCubicBezier = function interpolateCubicBezier(x0, y0, x1, y1, x2, y2, x3, y3, t, out) {
     if (out === undefined)

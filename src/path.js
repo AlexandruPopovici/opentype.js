@@ -331,36 +331,42 @@ Path.prototype.interpolate = function(lineSamples, curveSamples){
 
     var points = [];
     var k = 0;
-
-    for (var c = 0; c < commands.length; c++) {
-        var command = commands[c];
-        var samples = (command.type == "M" ? 1 : (command.type == "L" ? lineSamples : curveSamples));
-        
-        var state = { lastX: 0, lastY: 0, current: { x: 0, y: 0 } };
-
-        for (var i = 0 ; i < sampleCount; i++) {
-            if(step_fn(command, state, i/sampleCount)){
-                points[k] = state.current.x;
-                points[k+1] = state.current.y;
-                k += 2;
-            }
-        }
-    }
     var step_fn = function(command, state, t){
         switch (command.type) {
             case "M": state.lastX = command.x, state.lastY = command.y; return false;
-            case "L": interpolatePoints(state.lastX, state.lastY, command.x, command.y, t, state.current); return true;
-            //case "Q": interpolatorQuadraticBezier(command.x1, command.y1, command.x, command.y, t, PathInterpolator.Data, PathInterpolator.Index); return 0;
-                //case "Z": interpolatePoints(PathInterpolator.firstPoint_x, PathInterpolator.firstPoint_y, t, PathInterpolator.Data, PathInterpolator.Index); return 1;
-                //default: console.warn('Unimplemented command -> ', command.type);
+            case "L": this.interpolatePoints(state.lastX, state.lastY, command.x, command.y, t, state.current); return true;
+            case "Q": this.interpolateQuadraticBezier(state.lastX, state.lastY, command.x1, command.y1, command.x, command.y, t, state.current); return true;
+            case "C": this.interpolateCubicBezier(state.lastX, state.lastY, command.x1, command.y1, command.x2, command.y2, command.x, command.y, t, state.current); return true;
+            case "Z": this.interpolatePoints(state.lastX, state.lastY, this.commands[0].x, this.commands[0].y, t, state.current); return true;
+        }
+    }.bind(this);
+
+    var state = { lastX: 0, lastY: 0, current: { x: 0, y: 0 } };
+
+    for (var c = 0; c < this.commands.length; c++) {
+        var command = this.commands[c];
+        var samples = (command.type == "M" || command.type == "Z" ? 1 : (command.type == "L" ? lineSamples : curveSamples));
+
+        for (var i = 0 ; i <= samples; i++) {
+            if(step_fn(command, state, i/samples)){
+                var dx = Math.abs(state.lastX - state.current.x);
+                var dy = Math.abs(state.lastY - state.current.y);
+                var d = Math.sqrt(dx*dx+dy*dy);
+                if(d > 5){
+                    points[k] = state.current.x;
+                    points[k+1] = state.current.y;
+                    state.lastX = state.current.x;
+                    state.lastY = state.current.y;
+                    k += 2;
+                }
+            }
         }
     }
+    
     return points;
 };
 
-Path.prototype.interpolate = function(options){
 
-};
 /**
  * Computes point between two points at t
  * @param  {number} x0 - x of start point
